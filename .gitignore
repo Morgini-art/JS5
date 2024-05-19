@@ -1,3 +1,5 @@
 node_modules
 public/_graphics/
 public/_ai
+package.json
+package-lock.json
