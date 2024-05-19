@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>JS5</title>
+    <script src="script/player.js" defer></script>
+    <script src="script/hitbox.js" defer></script>
+    <script src="script/block.js" defer></script>
+    <script src="script/spritesheet.js" defer></script>
+    <script src="script/joy.js" defer></script>
+    <script src="script/invetory.js" defer></script>
+    <script src="script/effect.js" defer></script>
+    <script src="script/enemy.js" defer></script>
+    <script src="script/math.js" defer></script>
+    <script src="script/npc.js" defer></script>
+    <script src="script/gameMaps.js" defer></script>
+    <script src="script/recipe.js" defer></script>
+    <script src="script/load.js" defer></script>
+    <script src="script/main.js" defer></script>
+    <script src="script/physics.js" defer></script>
+    <script src="script/drop.js" defer></script>
+    <script src="script/event.js" defer></script>
+    <script src="script/draw.js" defer></script>
+</head>
+<style>
+    body {
+        background-color: #262927;
+        margin: 0;
+        text-align: center;
+        color: white;
+        font-family: monospace;
+    }
+
+    div#main {
+        display: grid;
+    }
+
+    canvas {
+        image-rendering: pixelated;
+        grid-row: 1;
+        grid-column: 1;
+    }
+
+    canvas#game-screen {
+        display: none;
+    }
+
+    canvas#game-view {
+/*        margin: 0 auto;*/
+        border: 1px solid white;
+    }
+    
+    a {
+        font-size: 18px;
+        color: white;
+        border: 1px solid white;
+        padding: 10px 8px;
+        text-decoration: none;
+        display: inline-block;
+        margin: 5px 5px;
+    }
+    
+    #tools {
+        float: left;
+    }
+</style>
+
+<body>
+    <h1>JS5</h1>
+    <h2>Dev tools</h2>
+    <div id="tools">
+        <a href="software/mapviewer.html">Map viewer tool</a>
+        <a href="Light/lighttest.html">Light test</a><br>
+        <a href="done.html">What I have done?</a><br>
+        <a href="software/structen.html">Structen</a>
+    </div>
+    <div id="main">
+        <canvas id="game-view" width="1300px" height="800px"></canvas>
+    </div>
+    <canvas id="game-screen" width="10000px" height="10000px"></canvas><br>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+Iron
+0.09
+120
+
+Gold
+0.083
+145
+
+Tungesten
+0.06
+140
+
+Częstość złóż.
+x < increment < y
+Im większa tym częściej.
+
+Wielkość złóż.
+x < tender < y
+Im większa tym mniejsze.
+
+

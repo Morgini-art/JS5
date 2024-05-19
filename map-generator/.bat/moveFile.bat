@@ -1,0 +1,1 @@
+xcopy /s/y C:\Users\x\Desktop\PROGRAMOWANIE\HTML\JS5\map-generator\maps\map.map C:\Users\x\Desktop\PROGRAMOWANIE\HTML\JS5\public

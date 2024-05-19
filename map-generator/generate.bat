@@ -1,0 +1,1 @@
+node main.js 0 0.08 200 200 50 50 55 -1 map.map

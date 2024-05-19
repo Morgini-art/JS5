@@ -1,0 +1,40 @@
+<script>
+    let gamepad = 0;
+    let effectPlay = 0;
+
+    window.addEventListener('gamepadconnected', (e) => {
+        gamepad = e.gamepad;
+
+    });
+
+    loop();
+
+
+
+    function loop() {
+        requestAnimationFrame(loop);
+        //        const 
+
+//        gamepad.hapticActuators[0].pulse(1.0, 200);
+
+
+        if (gamepad) {
+            if (gamepad.buttons[0].pressed && !effectPlay) {
+                console.log('DDD');
+                //                gamepad.
+                gamepad.vibrationActuator.playEffect("dual-rumble", {
+                    startDelay: 0,
+                    duration: 1000,
+                    weakMagnitude: 0.5,
+                    strongMagnitude: 0,
+                });
+                effectPlay = true;
+                
+                setTimeout(()=>{
+                    effectPlay = 0;
+                },1000);
+                //                console.log(gamepad.hapticActuators);
+            }
+        }
+    }
+</script>

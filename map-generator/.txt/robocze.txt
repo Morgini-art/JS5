@@ -1,0 +1,53 @@
+
+//function generate() {
+//    seed = Math.random();
+//    
+//    let timeY = 0;
+//    let increment = 1;
+//    let width = 50;
+//    let heigth = 50;
+//    let blockWidth = 50;
+//    let blockHeight = 50;
+//
+//    let tenderness = parseFloat(probalityInput.value); //0-255
+//    noise.seed(seed);
+//    for (let y = 0; y < heigth; y++) {
+//        let timeX = parseFloat(timeXInput.value);
+//        for (let x = 0; x < width; x++) {
+//            console.log(timeX, timeY);
+//            const r = Math.abs(noise.perlin2(timeX, timeY) * 255);
+//            console.log(r);
+//            if (r <= tenderness) {
+//                //                
+//                //                ctx.fillStyle = `black`;
+//                //                ctx.fillRect(x,y,1,1);
+//            } else {
+//                //                ctx.fillStyle = `white`;
+//                //                ctx.fillRect(x,y,1,1);
+//            }
+//            ctx.fillStyle = `rgb(${r},${r},${r},255)`;
+//            //            ctx.fillStyle = `red`;
+//            ctx.fillRect(x * blockWidth, y * blockHeight, blockWidth, blockHeight);
+//            //            if ()
+//
+//            timeX += increment;
+//        }
+//        timeY += increment;
+//    }
+//
+//    timeY = parseFloat(timeYInput.value);
+//    for (let y = 0; y < heigth; y++) {
+//        let timeX = parseFloat(timeXInput.value);
+//        for (let x = 0; x < width; x++) {
+//            const r = Math.abs(noise.perlin2(timeX, timeY) * 255);
+//            if (r <= tenderness) {
+//                ctx.fillStyle = `black`;
+//            } else {
+//                ctx.fillStyle = `white`;
+//            }
+//            ctx.fillRect(x * blockWidth + blockWidth * width, y * blockHeight, blockWidth, blockHeight);
+//            timeX += increment;
+//        }
+//        timeY += increment;
+//    }
+//}

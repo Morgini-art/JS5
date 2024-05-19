@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Light test JS5</title>
+</head>
+
+<body>
+
+    <div id="main">
+        <h1>Light test JS5</h1>
+        <div id="tools">
+            <h3 style="color: crimson">Tools</h3>
+            Draw chunks borders: <input id="chunk-border" type="checkbox" checked> <br>
+            Draw chunks size: <input id="chunk-size" type="checkbox" checked> <br>
+            Draw blocks borders: <input id="block-border" type="checkbox" checked> <br>
+        </div>
+        <br>
+
+        <div id="other">
+
+        </div>
+    </div>
+
+    <br>
+
+    <canvas width="12500px" height="12500px"></canvas>
+</body>
+
+</html>
+
+<style>
+    body {
+        margin: 0;
+        background-color: #262927;
+        color: white;
+        font-family: monospace;
+    }
+
+    @font-face {
+        font-family: Agdasima;
+        src: url(Agdasima.ttf);
+    }
+
+    div#main {
+        margin-left: 150px;
+        width: 422px;
+        text-align: center;
+    }
+
+    div#tools,
+    div#other {
+        font-size: 18px;
+        display: block;
+        width: 400px;
+        padding: 15px 10px;
+        border: 1px solid white;
+    }
+
+    button {
+        text-align: center;
+        background-color: white;
+        border: 1px solid white;
+        width: 20px;
+    }
+</style>
+
+<script>
+    const can = document.querySelector('canvas');
+    const chunkBordersInp = document.querySelector('input#chunk-border');
+    const chunkSizeInp = document.querySelector('input#chunk-size');
+    const blockBordersInp = document.querySelector('input#block-border');
+    const mapInfoDiv = document.querySelector('div#other');
+    const ctx = can.getContext('2d');
+
+
+    let obj;
+
+    
+    let eX = 450;
+    let eY = 450;
+    
+    can.addEventListener('mousedown', e=>{
+        eX = Math.floor(e.offsetX / 50) * 50;
+        eY = Math.floor(e.offsetY / 50) * 50;
+        getData();
+    });
+
+
+    const blocksImgs = [];
+    for (let el = 0; el < 5; el++) {
+        blocksImgs[el] = new Image();
+        const path = `../img/${el}.png`;
+        blocksImgs[el].src = path;
+    }
+
+
+    chunkBordersInp.onchange = () => {
+        getData();
+    }
+
+    chunkSizeInp.onchange = () => {
+        getData();
+    }
+
+    blockBordersInp.onchange = () => {
+        getData();
+    }
+    
+    function getDistance(x1, y1, x2, y2) {
+        const a = x1 - x2,
+        b = y1 - y2;
+        return Math.abs(~~Math.sqrt(a * a + b * b));
+    }
+    
+    function checkCollisionWithLinesSpecial(x1, y1, x2, y2, x3, y3, x4, y4) { // Line, line
+    const uA = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+    const uB = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+        
+    //    float uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
+    //    float uB = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
+
+    if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
+        const x = x1 + (uA * (x2-x1));
+        const y = y1 + (uA * (y2-y1));
+        return {bool:true, x:~~x, y:~~y};
+    }
+    return {bool:false};
+}
+function checkCollisionWithLineRectangleSpecial(x1, y1, x2, y2, hitbox) {  //Line, rect
+    const {x, y, w, h} = hitbox;
+    const left =   checkCollisionWithLinesSpecial(x1, y1, x2, y2, x    , y    , x    , y + h);
+    const right =  checkCollisionWithLinesSpecial(x1, y1, x2, y2, x + w, y    , x + w, y + h);
+    const top =    checkCollisionWithLinesSpecial(x1, y1, x2, y2, x    , y    , x + w, y    );
+    const bottom = checkCollisionWithLinesSpecial(x1, y1, x2, y2, x    , y + h, x + w, y + h);
+    
+    
+    if (left.bool || right.bool || top.bool || bottom.bool) {
+        let points = [];
+        
+        if (left.bool) {
+            points.push(left.x,left.y);
+        }
+        if (right.bool) {
+            points.push(right.x,right.y);
+        }
+        if (top.bool) {
+            points.push(top.x,top.y);
+        }
+        if (bottom.bool) {
+            points.push(bottom.x,bottom.y);
+        }
+        return {bool:true, points: points};
+    }
+    return {bool:false};
+}
+
+
+    
+    const nF = 80;
+    ctx.font = `${nF}px Arial`;
+    
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.5;
+    function getData() {
+        const nF = 80;
+        ctx.font = `${nF}px Arial`;
+        ctx.clearRect(0, 0, 125000, 125000);
+        fetch('map.json')
+            .then((res) => {
+                return res.json()
+            })
+            .then(data => {
+                //console.log(data);
+                const info = data.mapInfo;
+                mapInfoDiv.innerHTML = `
+                <h3 style="color: darkorange">Map info</h3>
+                Seed: ${info.seed}<br>
+                Map width:${info.mapWidth}<br>
+                Map height:${info.mapHeight}<br>
+                Block width:${info.blockWidth}<br>
+                Block height:${info.blockHeight}<br>
+                Chunks: ${data.chunks.length}`;
+            
+                data.chunks[0].data.push({x:eX,y:eY,w:50,h:50,id:4,chunkId:0});
+
+                for (const chunk of data.chunks) {
+                    for (const block of chunk.data) {
+                        ctx.drawImage(blocksImgs[block.id], block.x , block.y , block.w , block.h );
+                        if (blockBordersInp.checked) {
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(block.x ,block.y, block.w, block.h);
+                        }
+                        
+                        if (block.id === 4) {
+                            const rays = [];
+                            const last = [];
+                            
+                            let aX = 1,
+                                aY = 0,
+                                dX = 0,
+                                dY = -350,
+                                color = 'red',
+                                colorSwitch = 0;
+                            
+                            let lastX2 = 0,
+                                lastY2 = 0;
+                            
+                            let tourn = 0;
+                            
+                            let end = 8;
+                            
+                            const t = performance.now();
+                            
+                            for (let x = 0; x < end; x++) {
+                                let nX = block.x+block.w/2,
+                                      nY = block.y+block.h/2,
+                                    nX2 = block.x+block.w/2+(x*50*aX)+dX,
+                                    nY2 = block.y+block.h/2+(x*50*aY)+dY;
+                                
+                                /*console.log('S')
+                                console.log(aX, aY, dX, dY);
+                                console.log(x*50*aX);
+                                console.log(block.x+block.w/2);
+                                console.log('E')*/
+                                if (lastX2) {
+                                    nX2 = lastX2;
+                                } else if (lastY2) {
+                                    nY2 = lastY2;
+                                }
+//                                console.log(nX2, nY2);
+                                rays.push({
+                                    color: color,
+                                    x:nX,
+                                    y:nY,
+                                    x2:nX2,
+                                    y2:nY2,
+                                    points: []
+                                });
+                                if (x === 7) {
+                                    tourn++;
+                                    //console.warn(tourn);
+                                    if (tourn === 8) {
+                                        break;
+                                    } else {
+                                        x = 0;
+                                        switch (tourn) {
+                                            case 1:
+                                                lastX2 = nX2;
+                                                aX = 0;
+                                                aY = 1;
+                                                break;
+                                            case 2:
+//                                                dY = 10;
+//                                                lastX2 = ;
+                                                lastY2 = nY2;
+                                                dY = 10;
+                                                aX = 0;
+                                                aY = 1;
+                                                break;
+                                            case 3:
+                                                aX = -1;
+                                                aY = 0;
+                                                lastX2 = 0;
+                                                lastY2 = 0;
+                                                dY = 360;
+                                                dX = 350;
+                                                break;
+                                            case 4:
+                                                aX = -1;
+                                                aY = 0;
+                                                dX = -10;
+                                                break;
+                                            case 5:
+                                                aX = 0;
+                                                aY = -1;
+                                                dX = -360;
+                                                dY = 350;
+                                                break;
+                                            case 6:
+//                                                aX = 0;
+//                                                aY = -1;
+                                                dY = 0;
+                                                break;
+//                                                dX = 0;
+//                                                dY = 0;
+//                                                dX = -360;
+//                                                dY = 350;
+                                            case 7:
+                                                aX = 1;
+                                                aY = 0;
+                                                dY = -350;
+                                                end--;
+//                                                dY = 20;
+                                        }
+                                        
+                                        //console.log('Change');
+                                        color = colorSwitch% 2 ? "red":"yellow";
+                                        colorSwitch++;
+                                    }
+                                }
+                            }
+                            
+                            const n = performance.now() - t;
+                            //console.error(n);
+                                                    
+                            
+                            ctx.fillStyle = 'red';
+                            
+                            
+                            
+                            for (const ray of rays) {
+                                    for (const ch of data.chunks) {
+                                        for (const b of ch.data) {
+                                        const collision = checkCollisionWithLineRectangleSpecial(ray.x,ray.y,ray.x2,ray.y2, b);
+                                        if (collision.bool && b.x !== block.x || b.y !== block.y && collision.bool) {
+//                                            ctx.fillRect(~~collision.points[0], ~~collision.points[1], 5, 5);
+                                            ray.points.push(collision.points);
+                                        } 
+                                    }
+                                    
+                                }
+                                //console.log(ray.points);
+                            }
+                            
+                            for (const ray of rays) {
+                                const distances = [];
+                                for (const point of ray.points) {
+                                    distances.push(getDistance(ray.x, ray.y, point[0], point[1]));
+                                }
+                                /*console.warn(ray.points.length);
+                                console.warn(distances.length);*/
+                                const d = ray.points[distances.indexOf(Math.min(...distances))];
+                                //console.warn(d);
+                                if (d !== undefined) {
+                                    ray.x2 = ~~d[0];
+                                    ray.y2 = ~~d[1];
+                                }
+//                                ray.x2 = d.x;
+//                                ray.y2 = d.y;
+                                
+//                                console.log(distances.indexOf(Math.min(...distances)));
+                            }
+                            
+                            
+                            for (const ray of rays) {
+                                const {x,y,x2,y2,color} = ray;
+                                ctx.beginPath();
+                                ctx.moveTo(x, y)
+                                ctx.lineTo(x2, y2)
+                                ctx.closePath();
+                                ctx.strokeStyle = color;
+                                ctx.stroke();
+                            }
+                            
+                            const d = performance.now() - t;
+                            console.error(d);
+                        }
+
+                    }
+                    if (chunkBordersInp.checked) {
+                        ctx.strokeStyle = '#ebe354';
+                        ctx.strokeRect(chunk.x , chunk.y , chunk.w , chunk.h );
+                    }
+                    if (chunkSizeInp.checked) {
+                        ctx.fillStyle = '#ebe354';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(chunk.data.length, (chunk.x + 250) , (chunk.y + 250) );
+                    }
+                    
+
+                }
+            })
+            .catch((error) => {
+                console.error('Error: loading map failed Details:', error);
+            });
+    }
+
+
+    getData();
+</script>

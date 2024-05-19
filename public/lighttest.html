@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Light test</title>
+</head>
+<body>
+    <canvas width="800px" height="800px"></canvas>
+</body>
+<script>
+    const can = document.querySelector('canvas');
+    const ctx = can.getContext('2d');
+    
+    const blocks = [{x:400,y:400}]
+    
+    /*ctx.beginPath();
+    ctx.rect(50,50,50,50);
+    ctx.closePath();
+    ctx.clip();
+    
+    ctx.beginPath();
+    ctx.rect(20,20,200,200);
+    ctx.closePath();
+    ctx.fillStyle = 'red';
+    ctx.fill();*/
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,300,300);
+    
+//    ctx.beginPath();
+//    ctx.arc(100,100,50,0,360);
+//    ctx.closePath();
+//    ctx.fillStyle = '#eee';
+//    ctx.fill();
+    
+    ctx.beginPath();
+ctx.moveTo(90,89);
+ctx.lineTo(161,89);
+ctx.quadraticCurveTo(200,89,200,127);
+ctx.quadraticCurveTo(200,166,148,166);
+ctx.lineTo(115,166);
+ctx.lineTo(108,210);
+ctx.lineTo(69,210);
+ctx.lineTo(90,89);
+ctx.fillStyle = "#eee";
+ctx.fill();
+ctx.closePath();
+    
+//    ctx.beginPath();
+//    ctx.arc(100,100,50,0,360);
+//    ctx.closePath();
+//    ctx.clip();
+//    
+//    ctx.beginPath();
+//    ctx.rect(20,20,200,200);
+//    ctx.fillStyle = 'green';
+//    ctx.closePath();
+//    ctx.fill();
+    
+//    ctx.fillStyle = '#000';
+//    ctx.fillRect(0,0,300,300);
+    
+    
+
+    </script>
+</html>

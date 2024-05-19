@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Structen JS5</title>
+</head>
+
+<body>
+    
+    <div id="main">
+        <h1>Structen</h1>
+        <input type="file" id="file">
+    <button id="download">Download</button>
+    <button id="new">New</button>
+    <canvas width="2000px" height="800px"></canvas>
+       <!-- <div id="tools">
+            <h3 style="color: crimson">Tools</h3>
+            Scale <button onclick="scaleChange(-1)">+</button> <button onclick="scaleChange(1)">-</button> <br>
+            Draw chunks borders: <input id="chunk-border" type="checkbox" checked> <br>
+            Draw chunks size: <input id="chunk-size" type="checkbox" checked> <br>
+            Draw blocks borders: <input id="block-border" type="checkbox" checked> <br>
+            Draw ore with number: <input id="wich-ore-draw" value="0" type="number"><input type="checkbox" id="draw-only-with">
+        </div>-->
+        <br>
+
+<!--        <div id="other">-->
+
+        </div>
+    </div>
+
+    <br>
+    
+</body>
+
+</html>
+
+<style>
+    body {
+        margin: 0;
+        background-color: #262927;
+        color: white;
+        font-family: monospace;
+    }
+
+    @font-face {
+        font-family: Agdasima;
+        src: url(Agdasima.ttf);
+    }
+
+    div#main {
+        margin-left: 150px;
+        width: 422px;
+        text-align: center;
+    }
+
+    div#tools,
+    div#other {
+        font-size: 18px;
+        display: block;
+        width: 400px;
+        padding: 15px 10px;
+        border: 1px solid white;
+    }
+
+    
+    input[type="number"] {
+        width: 30px;
+    }
+</style>
+
+<script defer>
+    const can = document.querySelector('canvas');
+    /*const chunkBordersInp = document.querySelector('input#chunk-border');
+    const chunkSizeInp = document.querySelector('input#chunk-size');
+    const blockBordersInp = document.querySelector('input#block-border');
+    const mapInfoDiv = document.querySelector('div#other');
+    const wichOreDrawInput = document.querySelector('input#wich-ore-draw');*/
+//    const drawOnlyWithInp = document.querySelector('input#draw-only-with');
+    const ctx = can.getContext('2d');
+    const inputFile = document.querySelector('input#file');
+    const downloadBtn = document.querySelector('button#download');
+    const newBtn = document.querySelector('button#new');
+    
+     inputFile.addEventListener('change',e=>{
+         console.log(inputFile.files);
+         const reader = new FileReader();
+        reader.addEventListener('load', (event) => {
+            console.log(event.target.result);
+            obj = JSON.parse(event.target.result);
+            redrawStructure();
+        });
+         reader.readAsText(inputFile.files[0]);
+     });
+    
+    downloadBtn.addEventListener('click',e=>{
+        saveStructure();
+    });
+    
+    newBtn.addEventListener('click',e=>{
+        redrawStructure();
+    });
+
+
+    let obj = JSON.parse(`{
+    "blocks": [{"x":0,"y":-1,"id":0},{"x":-1,"y":-1,"id":0}, {"x":-1,"y":0,"id":4}],
+    "mainPoint": {"id":2}
+    }`);
+    
+    function checkCollisionWith(hitbox1, hitbox2) {
+    if (hitbox1.x < hitbox2.x + hitbox2.width &&
+        hitbox1.x + hitbox1.width > hitbox2.x &&
+        hitbox1.y < hitbox2.y + hitbox2.height &&
+        hitbox1.height + hitbox1.y > hitbox2.y) {
+
+        return true;
+
+    } else {
+        return false;
+    }
+}
+
+
+ctx.clearRect(0, 0, 2000, 800);
+    const blocksImgs = [];
+    
+        for (let el = 0; el < 19; el++) {
+        blocksImgs[el] = new Image();
+        const path = `../img/blocks/${el}.png`;
+        blocksImgs[el].src = path;
+        
+        
+        }
+        
+//        ctx.strokeRect(50,75*el, 50,50);
+    
+    can.addEventListener('mousedown',(e)=>{
+        
+        if (e.button === 1) {
+            cursorState = -1;   
+            redrawStructure();
+        } else {
+        const mouseHitbox = {x:e.offsetX,y:e.offsetY,width:1,height:1};
+        let x = 0, y = 1;
+        /*for (let el = 0; el < 19; el++) {
+            ctx.drawImage(blocksImgs[el], 800+x,75*y);*/
+        for (let el = 0; el < 19; el++) {
+            if (checkCollisionWith(mouseHitbox, {x:800+x,y:75*y,width:50,height:50})) {
+                activeCursor = el;
+                console.log('dddd');
+                redrawStructure();
+            }
+            if ( el % 8 === 0 && el !== 0) {
+                x += 80;
+                y = 0;
+            }
+            y++;
+        }
+        if (checkCollisionWith(mouseHitbox, {x:50,y:450,width:100,height:30})) {
+            cursorState = 0;
+            redrawStructure();
+        } else if (checkCollisionWith(mouseHitbox, {x:50,y:500,width:100,height:30})) {
+            cursorState = 1;
+            redrawStructure();
+        } else if (checkCollisionWith(mouseHitbox, {x:50,y:575,width:100,height:30})) {
+            cursorState = 2;
+            redrawStructure();
+        } else if (!checkCollisionWith(mouseHitbox, {x:800, y: 0, width:220, height:800})) {
+            const x = Math.floor(e.offsetX / 50);
+            const y = Math.floor(e.offsetY / 50);
+            if (cursorState === 0) {
+                obj.blocks.push({x:x-mainPX,y:y-mainPY,id:activeCursor})
+                redrawStructure();
+            } else if (cursorState === 1) {
+                    ctx.strokeRect(x*50, y*50, 50, 50);
+                console.log(x-mainPX, y-mainPY);
+                console.log(obj);
+                for (let z = 0; z < obj.blocks.length; z++) {
+                    const block = obj.blocks[z];
+                    if (block.x === x-mainPX && block.y === y-mainPY) {
+                        console.log('DDDDDDDDDDDDDDDDDD');
+                        obj.blocks.splice(z, 1);
+                        break;
+                    }
+                } 
+                redrawStructure();
+            } else if (cursorState === 2) {
+                mainPX = x;
+                mainPY = y;
+                redrawStructure();
+            }
+        }
+        
+        }
+    });
+    
+    
+    
+    const nF = 20;
+    ctx.font = `${nF}px Monospace`;
+    
+    ctx.lineWidth = 3;
+    
+    let activeCursor = 0;
+    
+    let cursorState = 0;
+    
+    let mainPX = 5,
+        mainPY = 5;
+    
+    function redrawStructure() {
+        ctx.clearRect(0, 0, 2000, 800);
+        
+        let x = 0, y = 1;
+        for (let el = 0; el < 19; el++) {
+            ctx.drawImage(blocksImgs[el], 800+x,75*y);
+            ctx.strokeStyle = 'lightgreen';
+            ctx.strokeRect(800+x,75*y, 50,50);
+            if (el === activeCursor) {
+                ctx.strokeStyle = 'blue';
+                ctx.strokeRect(800+x,75*y, 50,50);
+            }
+            if ( el % 8 === 0 && el !== 0) {
+                x += 80;
+                y = 0;
+            }
+            y++;
+        }
+        ctx.fillStyle = 'red';
+        if (cursorState===0) {
+            ctx.fillRect(50,450,100,30);
+        } else if (cursorState === 1) {
+            ctx.fillRect(50,500,100,30);
+        } else if (cursorState === 2) {
+            ctx.fillRect(50,575,100,30);
+        } else if (cursorState === 3) {
+            ctx.fillRect(50,625,140,30);
+        }
+        ctx.strokeStyle = 'lightgreen';
+        ctx.fillStyle = 'black';
+        ctx.strokeRect(50,450,100,30);
+        ctx.fillText('Draw',60,475);
+        ctx.strokeRect(50,500,100,30);
+        ctx.fillText('Erase',60,525);
+        ctx.strokeRect(50,575,100,30);
+        ctx.fillText('Move all',60,600);
+//        ctx.strokeRect(50,625,140,30);
+//        ctx.fillText('Set main point',60,650);
+        for (const block of obj.blocks) {
+            ctx.drawImage(blocksImgs[block.id], (mainPX+block.x)*50,(mainPY+block.y)*50);
+        }
+        ctx.drawImage(blocksImgs[obj.mainPoint.id], mainPX*50, mainPY*50);
+        ctx.strokeStyle = 'red';
+        ctx.strokeRect( mainPX*50, mainPY*50, 50, 50);
+    }  
+    
+    function saveStructure() {
+        const btn = document.createElement('a');
+        const blob = new Blob([JSON.stringify(obj)], { type: "text" })
+        btn.href = URL.createObjectURL(blob);
+        btn.download = 'myStructure.struct';
+        btn.click();
+        URL.revokeObjectURL(btn.href);
+    }
+
+    function loadStructure(file) {
+        const nF = 28;
+        ctx.font = `${nF}px Monospace`;
+        fetch(file)
+            .then((res) => {
+                return res.json()
+            })
+            .then(data => {
+                obj = data;
+                redrawStructure();
+            })
+            .catch((error) => {
+                console.error('Error: loading map failed Details:', error);
+            });
+    }
+
+//    loadStructure();
+</script>

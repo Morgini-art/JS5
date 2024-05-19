@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Map viewer JS5</title>
+</head>
+
+<body>
+
+    <div id="main">
+        <h1>Map Viewer tool</h1>
+        <div id="tools">
+            <h3 style="color: crimson">Tools</h3>
+            Scale <button onclick="scaleChange(-1)">+</button> <button onclick="scaleChange(1)">-</button> <br>
+            Draw chunks borders: <input id="chunk-border" type="checkbox" checked> <br>
+            Draw chunks size: <input id="chunk-size" type="checkbox" checked> <br>
+            Draw blocks borders: <input id="block-border" type="checkbox" checked> <br>
+            Draw ore with number: <input id="wich-ore-draw" value="0" type="number"><input type="checkbox" id="draw-only-with">
+        </div>
+        <br>
+
+        <div id="other">
+
+        </div>
+    </div>
+
+    <br>
+
+    <canvas width="12500px" height="12500px"></canvas>
+</body>
+
+</html>
+
+<style>
+    body {
+        margin: 0;
+        background-color: #262927;
+        color: white;
+        font-family: monospace;
+    }
+
+    @font-face {
+        font-family: Agdasima;
+        src: url(Agdasima.ttf);
+    }
+
+    div#main {
+        margin-left: 150px;
+        width: 422px;
+        text-align: center;
+    }
+
+    div#tools,
+    div#other {
+        font-size: 18px;
+        display: block;
+        width: 400px;
+        padding: 15px 10px;
+        border: 1px solid white;
+    }
+
+    button {
+        text-align: center;
+        background-color: white;
+        border: 1px solid white;
+        width: 20px;
+    }
+    
+    input[type="number"] {
+        width: 30px;
+    }
+</style>
+
+<script>
+    const can = document.querySelector('canvas');
+    const chunkBordersInp = document.querySelector('input#chunk-border');
+    const chunkSizeInp = document.querySelector('input#chunk-size');
+    const blockBordersInp = document.querySelector('input#block-border');
+    const mapInfoDiv = document.querySelector('div#other');
+    const wichOreDrawInput = document.querySelector('input#wich-ore-draw');
+    const drawOnlyWithInp = document.querySelector('input#draw-only-with');
+    const ctx = can.getContext('2d');
+
+
+    let obj;
+
+    let drawingScale = 1;
+
+    function scaleChange(c) {
+        if (c === 1) {
+            drawingScale *= 2;
+        } else {
+            drawingScale /= 2;
+        }
+
+        getData();
+    }
+
+    scaleChange(1);
+    scaleChange(1);
+
+    const blocksImgs = [];
+    for (let el = 0; el < 23; el++) {
+        blocksImgs[el] = new Image();
+        const path = `../img/blocks/${el}.png`;
+        blocksImgs[el].src = path;
+    }
+
+
+    chunkBordersInp.onchange = () => {
+        getData();
+    }
+
+    chunkSizeInp.onchange = () => {
+        getData();
+    }
+
+    blockBordersInp.onchange = () => {
+        getData();
+    }
+
+    wichOreDrawInput.onchange = () => {
+        getData();
+    }
+    
+    drawOnlyWithInp.onchange = () => {
+        getData();
+    }
+    
+    const nF = 80 / drawingScale;
+    ctx.font = `${nF}px Agdasima`;
+    
+    ctx.lineWidth = 3;
+
+    function getData() {
+        const nF = 80 / drawingScale;
+        ctx.font = `${nF}px Agdasima`;
+        ctx.clearRect(0, 0, 125000, 125000);
+        fetch('../map.map')
+            .then((res) => {
+                return res.json()
+            })
+            .then(data => {
+                console.log(data);
+                const info = data.mapInfo;
+                mapInfoDiv.innerHTML = `
+                <h3 style="color: darkorange">Map info</h3>
+                Seed: ${info.seed}<br>
+                Map width:${info.mapWidth}<br>
+                Map height:${info.mapHeight}<br>
+                Block width:${info.blockWidth}<br>
+                Block height:${info.blockHeight}<br>
+                Chunks: ${data.chunks.length}`;
+
+                for (const chunk of data.chunks) {
+                    for (const block of chunk.data) {
+                        if (drawOnlyWithInp.checked && block.id === parseInt(wichOreDrawInput.value)) {
+                            
+                        ctx.drawImage(blocksImgs[block.id], block.x / drawingScale, block.y / drawingScale, 50 / drawingScale, 50 / drawingScale);
+                        } else if (!drawOnlyWithInp.checked) {
+                            
+                        ctx.drawImage(blocksImgs[block.id], block.x / drawingScale, block.y / drawingScale, 50 / drawingScale,50 / drawingScale);
+                        }
+                        if (blockBordersInp.checked) {
+                            ctx.strokeStyle = 'black';
+                            ctx.strokeRect(block.x / drawingScale, block.y / drawingScale, block.w / drawingScale, block.h / drawingScale);
+                        }
+
+                    }
+                    if (chunkBordersInp.checked) {
+                        ctx.strokeStyle = '#ebe354';
+                        ctx.strokeRect(chunk.x / drawingScale, chunk.y / drawingScale, 500 / drawingScale, 500 / drawingScale);
+                    }
+                    if (chunkSizeInp.checked) {
+                        ctx.fillStyle = 'black';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(chunk.data.length, (chunk.x + 250) / drawingScale, (chunk.y + 250) / drawingScale);
+                    }
+
+                }
+            })
+            .catch((error) => {
+                console.error('Error: loading map failed Details:', error);
+            });
+    }
+
+    getData();
+</script>
