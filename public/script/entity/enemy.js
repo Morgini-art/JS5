@@ -18,7 +18,7 @@ class Enemy {
         this.state2 = '';
 //        this.invetory = [];
 //        this.activeSlot = 0;
-//        this.invetoryOpen = 0;
+//        this.open = 0;
 //        this.animationState = 'idle-r';
 //        this.animationEndEvent = 0;
 //        this.animationEnd = 0;

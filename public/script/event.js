@@ -8,12 +8,12 @@ canView.addEventListener('mouseup', (e) => {
 });
 
 canView.addEventListener('mousedown', (e) => {
-    if (e.button === 0) {
-        if(e.shiftKey) {
-//            player.x - Math.floor((1300 - player.width) / 2);
-            
-            player.x = e.offsetX + camera.x;
-            player.y = e.offsetY + camera.y;
+    const {button, shiftKey, offsetX, offsetY} = e;
+    
+    if (button === 0) {
+        if(shiftKey) {
+            player.x = offsetX + camera.x;
+            player.y = offsetY + camera.y;
         } else if (e.ctrlKey) {
             blocks.forEach((block)=>{
                 if ([23, 24, 25].some(el => el === block.id)) {
@@ -22,119 +22,32 @@ canView.addEventListener('mousedown', (e) => {
             });
         }
         
-        const {invetory, invetoryOpen} = player;
-        
-        const mouseHitbox = new Hitbox(e.offsetX, e.offsetY, 1, 1);
-        
-        let collisionId = -1;
-        
-        for (const slot of invetorySlotsHitbox) {
-            if (slot.id === 5 && !invetoryOpen) {
-                break;
-            } else {
-                if (checkCollisionWith(mouseHitbox, slot)) {
-                    collisionId = slot.id;  
-                } 
-            }
+        invetoryMouseLeftClick(e, player, player.open);
+        if (invetoryMouseState.activeChestInvetory) {
+            invetoryMouseLeftClick(e, interactiveObjects.filter(e=>e.type === 1 && e.open)[0]);
         }
-            
-            
+    } else if (button === 2) {
+        invetoryMouseRightClick(e, player, player.open);
+        if (invetoryMouseState.activeChestInvetory) {
+            invetoryMouseRightClick(e, interactiveObjects.filter(e=>e.type === 1 && e.open)[0]);
+        }
         
-        if (collisionId !== -1) {
-            if (invetoryMouseState.state === 0) {
-                if (player.invetory[collisionId].id !== -1) {
-                    //Save to memory and delete orginal
-                    invetoryMouseState.state = 1;
-                    invetoryMouseState.startId = collisionId;
-                    invetoryMouseState.temp1 = {
-                        id: player.invetory[collisionId].id,
-                        c: player.invetory[collisionId].c,
-                        name: player.invetory[collisionId].name,
-                        type: player.invetory[collisionId].type
-                    };
-//                    delete player.invetory[invetoryMouseState.startId].name;
-                    player.invetory[collisionId].id = -1;
-                    player.invetory[collisionId].c = 0;
-                    player.invetory[collisionId].type = -1;
+        const cursorHitbox = {x: offsetX + camera.x, y: offsetY + camera.y, width : 1, height : 1};
+        const chests = interactiveObjects.filter(e=>e.type === 1);
+        chests.forEach((chest, x)=>{
+            if (checkCollisionWith(chest, cursorHitbox)) {
+                if (invetoryMouseState.activeChestInvetory) {
+                    chests.forEach((e, y)=>{if (x !== y) {e.changeOpenState(0)}});
+                    invetoryMouseState.activeChestInvetory = false;
                 }
-            } else if (invetoryMouseState.state === 1 || invetoryMouseState.state === 2) {
-                invetoryMouseState.state = 0;
-
-                if (invetory[collisionId].id === -1) { //Empty - save
-                    player.invetory[collisionId].id = invetoryMouseState.temp1.id;
-                    player.invetory[collisionId].c = invetoryMouseState.temp1.c;
-                    player.invetory[collisionId].name = invetoryMouseState.temp1.name;
-                    player.invetory[collisionId].type = invetoryMouseState.temp1.type;
-                    invetoryMouseState.temp1.id = -1;
-                    invetoryMouseState.temp1.c = 0;
-                    invetoryMouseState.temp1.type = -1;
-                    invetoryMouseState.startId = -1;
-                } else if (invetory[collisionId].id === invetoryMouseState.temp1.id && invetoryMouseState.temp1.type !== 2) { //Same - add to counter
-                    player.invetory[collisionId].c += invetoryMouseState.temp1.c;
-                    invetoryMouseState.temp1.id = -1;
-                    invetoryMouseState.temp1.c = 0;
-                    invetoryMouseState.startId = -1;
-                } else { //Full - overwrite
-
-                    invetoryMouseState.temp2 = player.invetory[collisionId];
-
-                    player.invetory[collisionId] = invetoryMouseState.temp1;
-                    invetoryMouseState.state = 1;
-                    invetoryMouseState.temp1 = invetoryMouseState.temp2;
-                    invetoryMouseState.temp2 = 0;
-                    
-
-                    invetoryMouseState.state = 1;
-
-                }
+                player.open = true;
+                chest.changeOpenState();
+                invetoryMouseState.activeChestInvetory = chest.open;
             }
-        } else {
-            creatingBlocksInterval = setInterval(createBlock, 100);
-        }
-        
-    } else if (e.button === 2) {
-        
-        const {invetory, invetoryOpen} = player;
-        
-        const mouseHitbox = new Hitbox(e.offsetX, e.offsetY, 1, 1);
-        
-        let collisionId = -1;
-        
-        for (const slot of invetorySlotsHitbox) {
-            if (slot.id === 5 && !invetoryOpen) {
-                break;
-            } else {
-                if (checkCollisionWith(mouseHitbox, slot)) {
-                    collisionId = slot.id;  
-                } 
-            }
-        }
-        
-        if (collisionId !== -1) {
-            
-            if (player.invetory[collisionId].id !== -1) {
-                if (invetoryMouseState.temp1.id === -1 || invetoryMouseState.temp1.id === player.invetory[collisionId].id && invetoryMouseState.temp1.type !== -1) {
-                    player.invetory[collisionId].c--;
-                    invetoryMouseState.temp1.id = player.invetory[collisionId].id;
-                    invetoryMouseState.temp1.c++;
-                    invetoryMouseState.temp1.name = player.invetory[collisionId].name;
-                    invetoryMouseState.temp1.type = player.invetory[collisionId].type;
-                    invetoryMouseState.state = 2;
-                    if (player.invetory[collisionId].c === 0) {
-                        player.invetory[collisionId].id = -1;
-                        player.invetory[collisionId].name = 0;
-                        player.invetory[collisionId].type = -1;
-                    }
-                }
-            }
-            
-        } else {
-            deletingBlocksInterval = setInterval(deleteBlock, 100);
-        }
+        });
     }
 });
 
-const invetorySlotsHitbox = [];
 invetorySlotsHitboxGenerate();
 
 function invetorySlotsHitboxGenerate() {
@@ -148,7 +61,7 @@ function invetorySlotsHitboxGenerate() {
             x = 0;
         }
         const dX = 60 + x * 60;
-        invetorySlotsHitbox.push({
+        player.invetoryHitboxSlots.push({
             x: dX,
             y: y,
             width: 50,
@@ -159,7 +72,6 @@ function invetorySlotsHitboxGenerate() {
         x++;
     }
 }
-
 
 canView.addEventListener('contextmenu', e => {
     e.preventDefault();
@@ -310,7 +222,7 @@ document.addEventListener('keydown', (e) => {
         } else if (e.keyCode === 115) { //F4
             gamepadSettings.showGamepadSettings = !gamepadSettings.showGamepadSettings;
         } else if (e.keyCode === 69) {
-            player.invetoryOpen = !player.invetoryOpen;
+            player.open = !player.open;
         }
     }
 

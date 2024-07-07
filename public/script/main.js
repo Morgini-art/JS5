@@ -3,7 +3,7 @@ const ctx = can.getContext('2d');
 const canView = document.querySelector('canvas#game-view');
 const ctxView = canView.getContext('2d');
 
-const player = new Player(0,0,74,96, 2,150, 100);
+const player = new Player(0,0,74,96, 3,150, 100);
 
 const chunks = [];
 const actualChunks = [];
@@ -14,6 +14,8 @@ const enemies = [];
 enemies.push(new Enemy(4775, 1550, 74, 96, 2, 150, 100));
 
 let blocks = [];
+const interactiveObjects = [];
+const allInteractiveObjects = [];
 
 let mapSettings;
 
@@ -25,7 +27,7 @@ ctx.imageSmoothingEnabled = false;
 const warrior1Spritesheet = new Map();
 const chicken1Spritesheet = new Map();
 
-warrior1Spritesheet.set('walk-r', new Spritesheet('img/creature/warrior2/walk.png', 8, 20, {w:96, h:96}, 0));
+warrior1Spritesheet.set('walk-r', new Spritesheet('img/creature/warrior2/walk.png', 8, 10, {w:96, h:96}, 0));
 warrior1Spritesheet.set('idle-r', new Spritesheet('img/creature/warrior2/idle.png', 5, 30, {w:96, h:96}, 0));
 warrior1Spritesheet.set('jump-r', new Spritesheet('img/creature/warrior2/jump2.png', 7, 18, {w:96, h:96}, 0));
 warrior1Spritesheet.set('fall-r', new Spritesheet('img/creature/warrior2/fall.png', 2, 30, {w:96, h:96}, 0));
@@ -38,7 +40,6 @@ npcs.push(new NPC(0, 0, 48, 48, new ChickenBehaviour(), new Map()));
 
 chicken1Spritesheet.set('walk-r', new Spritesheet('img/creature/chicken/walk2.png', 3, 30, {w:32, h:32}, 0));
 chicken1Spritesheet.set('idle-r', new Spritesheet('img/creature/chicken/idle2.png', 1, 30, {w:32, h:32}, 0));
-
 
 const backgroundsImg = [];
 backgroundsImg[0] = new Image();
@@ -80,7 +81,6 @@ let deltaTime = 1;
 
 let gameUiInputs = [];
 
-
 let deletingBlocksInterval,
     creatingBlocksInterval,
     mouseX = 0,
@@ -90,7 +90,8 @@ const invetoryMouseState = {
     state: 0,
     temp1: {id:-1,c:0,name:0},
     temp2: 0,
-    startId: -1
+    startId: -1,
+    activeChestInvetory: 0 // 0 - null, 1 - chest is open
 };
 
 let devInfo = true;
@@ -243,44 +244,69 @@ const loadGameState = loadGame();
     console.log(res);
 });*/
 
-function loop() {
-//    totalFrames++;
-    lTime = performance.now();
-//    console.info('Game loop start');
+const loopFunctions = {
+        forEach: () => {
+            blocks.length = 0;
+            interactiveObjects.length = 0;
+            actualChunks.length = 0;
+            actualDrops.length = 0;
+
+            chunks.forEach((chunk, chunkId) => {
+                if (checkCollisionWith(chunk, camera)) {
+                    const nChunk = chunk;
+                    nChunk.id = chunkId;
+                    actualChunks.push(nChunk);
+                }
+            });
+
+            actualChunks.forEach((chunk) => {
+                blocks = blocks.concat(chunk.data);
+            });
+
+            drops.forEach((drop, dropId) => {
+                if (checkCollisionWith(drop, camera)) {
+                    const nDrop = drop;
+                    nDrop.orginalId = dropId;
+                    actualDrops.push(nDrop);
+                }
+            });
+
+            allInteractiveObjects.forEach((object) => {
+                if (checkCollisionWith(object, camera)) {
+                    interactiveObjects.push(object);
+                }
+            });
+        },
+        fpsUtils: () => {
+            const t = performance.now();
+
+            const dt = t - startTime;
+            if (dt > 1000) {
+                FPSNormal = frames * 1000 / dt;
+
+                frames = 0;
+                startTime = t;
+            }
+            if (t - lTime > FPSObjective) {
+                deltaTime = (t - lTime) / FPSObjective;
+            } else {
+                deltaTime = 1;
+            }
+            ctxView.fillText(deltaTime, 1250, 80);
+        }
+};
     
+function loop() {
+    frames++;
+    lTime = performance.now();
     
     camera.x = player.x - Math.floor((1300 - player.width) / 2);
     camera.y = player.y - Math.floor((800 - player.height) / 2);
     
-    blocks.length = 0;
-    actualChunks.length = 0;
-    actualDrops.length = 0;
+    loopFunctions.forEach();
     
-//        console.log(chunks);
-    chunks.forEach((chunk, chunkId)=>{
-        if (checkCollisionWith(chunk, camera)) {
-            const nChunk = chunk;
-            nChunk.id = chunkId;
-            actualChunks.push(nChunk);
-        }
-    });
-    
-    actualChunks.forEach((chunk)=>{
-        blocks = blocks.concat(chunk.data);
-    });
-    
-    drops.forEach((drop, dropId)=>{
-        if (checkCollisionWith(drop, camera)) { 
-            const nDrop = drop;
-            nDrop.orginalId = dropId;
-            actualDrops.push(nDrop);
-        }
-    });
-            
     requestAnimationFrame(loop);
-    
-    
-    
+        
     if (camera.x < 0) {
         camera.x = 0;
     } else if (camera.x+camera.width > mapSettings.mapWidth * 50) {
@@ -300,6 +326,10 @@ function loop() {
         drawBlock(block, ctx, blocksImgs[block.id]);
     }
     
+    for (const object of interactiveObjects) {
+        drawInteractiveObject(object);
+    }
+    
     drawPlayer(player, ctx);
     
     for (const npc of npcs) {
@@ -313,38 +343,14 @@ function loop() {
     
     for (const enemy of enemies) {
         drawEnemy(ctx, enemy);
-//        enemyAi(ctx, enemy, player, blocks);
+        //enemyAi(ctx, enemy, player, blocks);
     }
     
     actualDropsLoop();
-    
     effectsLoop([player], FPSObjective*deltaTime);
-    
-        
     playerPhysics();
-    
     doWhilemove(player, blocks, deltaTime);
-    
     ctxView.drawImage(can, camera.x, camera.y,1300,800,0,0, 1300 , 800);
-    
     drawUi();
-    
-    
-    const t = performance.now();
-    
-    const dt = t - startTime;
-    if (dt > 1000) {
-        FPSNormal = frames * 1000 / dt;
-        
-        frames = 0;
-        startTime = t;
-    }
-    if (t - lTime > FPSObjective) {
-        deltaTime = (t - lTime) / FPSObjective;
-    } else {
-        deltaTime = 1;
-    }
-    ctxView.fillText(dt, 1250,80);
-    frames++;
-    
+    loopFunctions.fpsUtils();
 }

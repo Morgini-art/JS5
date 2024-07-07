@@ -139,7 +139,15 @@ function loadMap(mapName) {
                 const middleChunk = data.mapInfo.mapWidth / 2 * 50;
                 player.x = middleChunk;
                 player.y = 1650;
+                const img1 = new Image();
+                const img2 = new Image();
+                img1.src = 'img/interactiveObjects/chest/0.png';
+                img2.src = 'img/interactiveObjects/chest/1.png';
+                allInteractiveObjects.push(new Chest(middleChunk-125, 1825, 75, 75, 0,[img1, img2], {frameId:0}, 5));
+                allInteractiveObjects.push(new Chest(middleChunk-325, 1875, 75, 75, 0,[img1, img2], {frameId:0}, 5));
                 player.startYFalling = 1650;
+                delete img1;
+                delete img2;
                 console.info(`End loading map ${dT}ms`);
                 resolve(1)
 

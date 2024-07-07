@@ -15,15 +15,15 @@ class Player {
         this.maxLife = maxLife;
         this.invetory = [];
         this.activeSlot = 0;
-        this.invetoryOpen = 0;
+        this.open = 0;
         this.animationState = 'idle-r';
         this.animationEndEvent = 0;
         this.animationEnd = 0;
         this.startYFalling = y;
         this.effects = [];
+        this.invetoryHitboxSlots = [];
     }
 }
-
 
 function drawPlayer(player, ctx) {
     const {
@@ -36,8 +36,6 @@ function drawPlayer(player, ctx) {
     ctx.strokeStyle = 'red';
     const drawX = ~~x;
     const drawY = ~~y;
-    
-    ctx.strokeRect(drawX, drawY, width, height);
 }
 
 function doWhilemove(player, blocks, dT) {

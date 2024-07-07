@@ -1,3 +1,35 @@
+function drawInvetory(objectsInvetory, opened, y=120, x=0) {
+    const {invetory} = objectsInvetory;
+        
+    for (const item of invetory) {
+        if (x === 5) {
+            if (opened) {
+                y += 60;
+                x = 0;
+            } else {
+                break;
+            }
+        }
+        
+        const dX = 60 + x * 60;
+        
+        ctxView.strokeRect(dX, y, 50, 50);
+        
+        if (item.id !== -1) {
+            let drawingContext = [];
+            if (!item.type) { //x === 0
+                drawingContext = blocksImgs;
+            } else if (item.type === 1) { //
+                drawingContext = itemsImgs;
+            }
+//            console.log(item);
+            ctxView.drawImage(drawingContext[item.id],dX+12,y+12,25,25);
+            drawTextOutline(item.c, dX+30, y+42, '1000 18px Monospace');
+        }
+        x++;
+    }
+}
+
 function drawUi() {
     //Player hp
     if (player.life > 0) {
@@ -23,42 +55,16 @@ function drawUi() {
     }
     
     //Invetory
-    let y = 120;
-    let x = 0;
-    
-    const {activeSlot, invetory, invetoryOpen} = player;
+    const {activeSlot, invetory, open} = player;
     
     ctxView.fillStyle = '#f0e8af';
     ctxView.fillRect(60+activeSlot*60, 120, 50, 50);
+    drawInvetory(player, open);
     
-    
-    for (const item of invetory) {
-        if (x === 5) {
-            if (invetoryOpen) {
-                y += 60;
-                x = 0;
-            } else {
-                break;
-            }
-        }
-        
-        const dX = 60 + x * 60;
-        
-        ctxView.strokeRect(dX, y, 50, 50);
-        
-        if (item.id !== -1) {
-            let drawingContext = [];
-            if (!item.type) { //x === 0
-                drawingContext = blocksImgs;
-            } else if (item.type === 1) { //
-                drawingContext = itemsImgs;
-            }
-//            console.log(item);
-            ctxView.drawImage(drawingContext[item.id],dX+12,y+12,25,25);
-            drawTextOutline(item.c, dX+30, y+42, '1000 18px Monospace');
-        }
-        x++;
+    if (invetoryMouseState.activeChestInvetory) {
+        drawInvetory(interactiveObjects.filter(e=>e.type === 1 && e.open)[0], 1, 400);
     }
+    
     
     if (invetory[activeSlot].id !== -1) {
         const t = invetory[activeSlot].name;
